@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { rootAgent } from 'src/agents/root.agent';
 import { CitizenshipQueryDto, CitizenshipResponseDto, AgentEventDto } from 'src/agents/dto/citizenship.dto';
+import { ConversationsService } from 'src/conversations/conversations.service';
+import { ChatMessageRole } from 'src/conversations/entities/chat-message.entity';
+import { TaskStatus } from 'src/conversations/entities/task.entity';
 
 /**
  * CitizenshipService
@@ -30,6 +33,10 @@ export class CitizenshipService {
 
     private readonly appName = process.env.ADK_APP_NAME ?? 'citizenship_assistant';
 
+    constructor(
+        private readonly conversationsService: ConversationsService,
+    ) {}
+
     /**
      * InMemoryRunner encapsula tanto el Runner como el InMemorySessionService
      * en un solo objeto conveniente. Es la forma idiomática en ADK TypeScript.
@@ -52,6 +59,13 @@ export class CitizenshipService {
         const sessionId = dto.sessionId ?? uuidv4();
 
         this.logger.log(`[${sessionId}] Procesando consulta: "${dto.query}"`);
+
+        await this.conversationsService.createMessage({
+            sessionId,
+            userId,
+            role: ChatMessageRole.USER,
+            content: dto.query,
+        });
 
         // ── 1. Crear la sesión ADK con estado inicial ───────────────────────────
         //    research_topic se inyecta en session.state para que los agentes
@@ -121,6 +135,62 @@ export class CitizenshipService {
 
         const processingTimeMs = Date.now() - startTime;
         this.logger.log(`[${sessionId}] Completado en ${processingTimeMs}ms`);
+
+        await this.conversationsService.createMessage({
+            sessionId,
+            userId,
+            role: ChatMessageRole.ASSISTANT,
+            content: finalSummary,
+            metadata: { events, processingTimeMs },
+        });
+
+        // ── 4. Crear tareas a partir del JSON estructurado ────────────────
+        try {
+            const summaryData = JSON.parse(finalSummary);
+            const title = summaryData.title ?? 'Trámite';
+            const steps: string[] = summaryData.steps ?? [];
+            const documents: { name: string }[] = summaryData.documents ?? [];
+            const recommendations: string[] = summaryData.recommendations ?? [];
+
+            // Tarea principal del trámite
+            await this.conversationsService.createTask({
+                sessionId,
+                title,
+                description:
+                    `Institución: ${summaryData.institution ?? 'N/A'}\n` +
+                    `Costo: ${summaryData.cost ?? 'N/A'}\n` +
+                    `Tiempo: ${summaryData.time ?? 'N/A'}\n` +
+                    `Modalidad: ${summaryData.modality ?? 'N/A'}`,
+                status: TaskStatus.PENDING,
+            });
+
+            // Una tarea por cada paso
+            for (const step of steps) {
+                await this.conversationsService.createTask({
+                    sessionId,
+                    title: step,
+                    status: TaskStatus.PENDING,
+                });
+            }
+
+            // Una tarea por cada documento requerido
+            for (const doc of documents) {
+                await this.conversationsService.createTask({
+                    sessionId,
+                    title: `Obtener: ${doc.name}`,
+                    status: TaskStatus.PENDING,
+                });
+            }
+
+            this.logger.log(
+                `[${sessionId}] ${1 + steps.length + documents.length} tarea(s) creada(s)` +
+                ` — "${title}"`,
+            );
+        } catch (e) {
+            this.logger.warn(
+                `[${sessionId}] No se pudieron crear tareas: ${(e as Error).message}`,
+            );
+        }
 
         return {
             sessionId,
