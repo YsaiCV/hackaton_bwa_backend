@@ -6,6 +6,8 @@ import {
   HttpStatus,
   Logger,
   Res,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,9 +19,11 @@ import { type Response } from 'express';
 
 import { CitizenshipService } from './procedures.service';
 import { CitizenshipQueryDto, CitizenshipResponseDto } from 'src/agents/dto/citizenship.dto';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
 @ApiTags('Citizenship')
 @Controller('citizenship')
+@UseGuards(FirebaseAuthGuard)
 export class CitizenshipController {
   private readonly logger = new Logger(CitizenshipController.name);
 
@@ -55,9 +59,10 @@ Devuelve el resumen estructurado y los eventos de cada agente.
     status: 500,
     description: 'Error interno del agente o de la API de Gemini',
   })
-  async query(@Body() dto: CitizenshipQueryDto): Promise<CitizenshipResponseDto> {
+  async query(@Body() dto: CitizenshipQueryDto, @Req() req: any): Promise<CitizenshipResponseDto> {
     this.logger.log(`POST /citizenship/query — "${dto.query}"`);
-    return this.citizenshipService.processQuery(dto);
+    const userId = req.user?.id;
+    return this.citizenshipService.processQuery(dto, userId);
   }
 
   /**
@@ -77,6 +82,7 @@ Devuelve el resumen estructurado y los eventos de cada agente.
   @ApiBody({ type: CitizenshipQueryDto })
   async queryStream(
     @Body() dto: CitizenshipQueryDto,
+    @Req() req: any,
     @Res() res: Response,
   ): Promise<void> {
     this.logger.log(`POST /citizenship/query/stream — "${dto.query}"`);
@@ -93,8 +99,9 @@ Devuelve el resumen estructurado y los eventos de cada agente.
     };
 
     try {
+      const userId = req.user?.id;
       // Ejecutar el pipeline y emitir cada evento como SSE
-      const result = await this.citizenshipService.processQuery(dto);
+      const result = await this.citizenshipService.processQuery(dto, userId);
 
       // Emitir eventos individuales
       for (const event of result.events) {

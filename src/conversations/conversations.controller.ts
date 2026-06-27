@@ -8,27 +8,31 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ConversationsService } from './conversations.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { FirebaseAuthGuard } from 'src/auth/firebase-auth.guard';
 
 @ApiTags('Conversations')
 @Controller('conversations')
+@UseGuards(FirebaseAuthGuard)
 export class ConversationsController {
   constructor(private readonly service: ConversationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todas las conversaciones recientes' })
-  async getConversations() {
-    return this.service.getSessions();
+  @ApiOperation({ summary: 'Obtener todas las conversaciones recientes del usuario' })
+  async getConversations(@Req() req: any) {
+    return this.service.getSessionsByUser(req.user.id);
   }
 
   @Get(':sessionId/messages')
   @ApiOperation({ summary: 'Obtener el historial de mensajes de una conversación' })
-  async getMessages(@Param('sessionId') sessionId: string) {
-    return this.service.getMessagesBySession(sessionId);
+  async getMessages(@Param('sessionId') sessionId: string, @Req() req: any) {
+    return this.service.getMessagesBySession(sessionId, req.user.id);
   }
 
   @Post('tasks')
@@ -40,8 +44,11 @@ export class ConversationsController {
 
   @Get(':sessionId/tasks')
   @ApiOperation({ summary: 'Obtener las tareas de una conversación' })
-  async getTasks(@Param('sessionId') sessionId: string) {
-    return this.service.getTasksBySession(sessionId);
+  async getTasks(@Param('sessionId') sessionId: string, @Req() req: any) {
+    // Para ser robustos, validamos que la sesión pertenezca al usuario
+    // usando un chequeo en la capa de servicio (opcional en tareas por ahora, pero 
+    // lo delegaremos a getTasksBySession)
+    return this.service.getTasksBySession(sessionId, req.user.id);
   }
 
   @Patch('tasks/:id')
