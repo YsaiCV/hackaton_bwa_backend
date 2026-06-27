@@ -22,10 +22,14 @@ Con base en la siguiente investigación realizada:
 {research_results}
 
 Crea una guía práctica y fácil de entender. 
-Debes devolver ÚNICA Y EXCLUSIVAMENTE un objeto JSON válido (sin formato markdown \`\`\`json, solo las llaves). 
-No incluyas texto antes ni después del JSON. El JSON debe tener EXACTAMENTE esta estructura:
+Debes detectar inteligentemente si la investigación describe UN SOLO trámite específico o VARIOS trámites necesarios para lograr un objetivo (ej. abrir una empresa, casarse).
 
+Devuelve ÚNICA Y EXCLUSIVAMENTE un objeto JSON válido (sin formato markdown \`\`\`json, solo las llaves). No incluyas texto antes ni después.
+
+CASO A: SI ES UN SOLO TRÁMITE ESPECÍFICO
+Usa EXACTAMENTE esta estructura:
 {
+  "type": "single_procedure",
   "title": "Nombre del trámite (ej: Pago de impuesto municipal)",
   "institution": "Nombre de la institución (ej: Gobierno Autónomo Municipal)",
   "cost": "Costo aproximado (ej: Bs. 100-500 o Gratuito)",
@@ -75,6 +79,23 @@ No incluyas texto antes ni después del JSON. El JSON debe tener EXACTAMENTE est
   "hasDownloadableDocs": true/false,
   "downloadableFormUrl": "URL del PDF rellenable (si lo hay) o null",
   "hasDynamicFill": true/false
+}
+
+CASO B: SI SON MÚLTIPLES TRÁMITES PARA UN OBJETIVO (ej: "Abrir un restaurante")
+Usa EXACTAMENTE esta estructura:
+{
+  "type": "procedure_list",
+  "summary": "Para lograr tu objetivo, necesitas realizar los siguientes trámites en orden:",
+  "procedures": [
+    {
+      "title": "Nombre del trámite 1 (ej. Licencia de Funcionamiento)",
+      "description": "Breve descripción de para qué sirve este trámite o quién lo emite."
+    },
+    {
+      "title": "Nombre del trámite 2 (ej. Registro en SEPREC)",
+      "description": "Breve descripción..."
+    }
+  ]
 }
 `,
   outputKey: 'final_summary',
