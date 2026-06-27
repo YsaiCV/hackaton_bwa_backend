@@ -86,31 +86,31 @@ export class DocumentsService {
     const fontSize = 12;
 
     // Fecha a la derecha
-    const header = `${data.ciudad || 'El Alto'} ${data.fecha || '10 de Diciembre del 2014'}.`;
+    const header = `${data.ciudad || '_________________'}, ${data.fecha || '___ de ______________ de 20__'}`;
     page.drawText(header, { x: 300, y: currentY, size: fontSize });
     currentY -= 60;
 
     // Destinatario
-    page.drawText(data.destinatarioTitulo || 'Señor', { x: marginX, y: currentY, size: fontSize });
+    page.drawText(data.destinatarioTitulo || 'Señor(a):', { x: marginX, y: currentY, size: fontSize });
     currentY -= 15;
-    page.drawText(data.destinatarioNombre || 'Dr. Iván Molina Gutierrez', { x: marginX, y: currentY, size: fontSize });
+    page.drawText(data.destinatarioNombre || '_________________________________________', { x: marginX, y: currentY, size: fontSize });
     currentY -= 15;
-    page.drawText(data.destinatarioCargo || 'Director de la carrera de Derecho U.P.E.A.', { x: marginX, y: currentY, size: fontSize });
+    page.drawText(data.destinatarioCargo || '_________________________________________', { x: marginX, y: currentY, size: fontSize });
     currentY -= 15;
     page.drawText('Presente.-', { x: marginX, y: currentY, size: fontSize });
     currentY -= 40;
 
     // Referencia
-    const ref = `Ref. ${data.referencia || 'SOLICITUD DE HISTORIAL ACADEMICO'}`;
+    const ref = `Ref. ${data.referencia || '_________________________________________'}`;
     page.drawText(ref, { x: marginX + 150, y: currentY, size: fontSize });
     currentY -= 40;
 
     // Saludo
-    page.drawText(data.saludo || 'Señor Director:', { x: marginX, y: currentY, size: fontSize });
+    page.drawText(data.saludo || 'De mi mayor consideración:', { x: marginX, y: currentY, size: fontSize });
     currentY -= 30;
 
     // Cuerpo
-    const body = data.cuerpo || 'A tiempo de saludar y felicitar a su persona, por la excelente labor al frente de la dirección de carrera de derecho de la UPEA, solicito, me extienda una cpioa de mi historial de calificaciones, vía kardex con la finalidad de conocer mis materias aprobadas.';
+    const body = data.cuerpo || 'A través de la presente solicito muy respetuosamente se me extienda ____________________________________________________________________________________________________________________________________________________________________________________________________________________________________.';
     
     // pdf-lib soporta maxWidth y wrapping automáticamente
     page.drawText(body, { 
@@ -133,14 +133,14 @@ export class DocumentsService {
       maxWidth: 420,
       lineHeight: 18 
     });
-    currentY -= 80;
+    currentY -= 100;
 
     // Firma (centrado inferior)
-    page.drawText(data.remitenteNombre || 'Univ. CRUZ GUTIERREZ JOSE LUIS', { x: marginX + 100, y: currentY, size: fontSize });
-    currentY -= 15;
-    page.drawText(data.remitenteReg || 'Reg. Univ. 9003029', { x: marginX + 100, y: currentY, size: fontSize });
-    currentY -= 15;
-    page.drawText(data.remitenteCI || 'CI 6922963 L.P.', { x: marginX + 100, y: currentY, size: fontSize });
+    page.drawText(data.remitenteNombre || 'Firma: ______________________________', { x: marginX + 100, y: currentY, size: fontSize });
+    currentY -= 20;
+    page.drawText(data.remitenteReg || 'Aclaración de firma: ____________________', { x: marginX + 100, y: currentY, size: fontSize });
+    currentY -= 20;
+    page.drawText(data.remitenteCI || 'C.I.: _______________________________', { x: marginX + 100, y: currentY, size: fontSize });
 
     return await pdfDoc.save();
   }

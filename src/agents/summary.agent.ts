@@ -37,8 +37,24 @@ No incluyas texto antes ni después del JSON. El JSON debe tener EXACTAMENTE est
     "Paso 2 detallado..."
   ],
   "documents": [
-    "Documento 1...",
-    "Documento 2..."
+    {
+      "name": "Documento 1...",
+      "requiresRequestLetter": false,
+      "requestLetterFields": []
+    },
+    {
+      "name": "Carta de Solicitud...",
+      "requiresRequestLetter": true,
+      "requestLetterFields": [
+        { "name": "ciudad", "label": "Ciudad" },
+        { "name": "destinatarioNombre", "label": "Nombre del destinatario" },
+        { "name": "destinatarioCargo", "label": "Cargo del destinatario" },
+        { "name": "referencia", "label": "Referencia o motivo de la carta" },
+        { "name": "cuerpo", "label": "Cuerpo explicativo de la solicitud" },
+        { "name": "remitenteNombre", "label": "Nombre del solicitante" },
+        { "name": "remitenteCI", "label": "C.I. del solicitante" }
+      ]
+    }
   ],
   "recommendations": [
     "Recomendación 1...",
