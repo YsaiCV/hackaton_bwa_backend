@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
@@ -16,9 +16,9 @@ export class ConversationsService {
     private readonly messageRepo: Repository<ChatMessage>,
     @InjectRepository(Task)
     private readonly taskRepo: Repository<Task>,
-  ) {}
+  ) { }
 
-  async getSessions(): Promise<{
+  async getSessionsByUser(userId: string): Promise<{
     sessionId: string;
     userId: string;
     firstMessage: string | null;
@@ -36,6 +36,7 @@ export class ConversationsService {
         `MIN(CASE WHEN msg.role = 'user' THEN msg.content END)`,
         'firstMessage',
       )
+      .where('msg.user_id = :userId', { userId })
       .groupBy('msg.session_id')
       .addGroupBy('msg.user_id')
       .orderBy('MAX(msg.created_at)', 'DESC')
@@ -61,9 +62,9 @@ export class ConversationsService {
     return this.messageRepo.save(message);
   }
 
-  async getMessagesBySession(sessionId: string): Promise<ChatMessage[]> {
+  async getMessagesBySession(sessionId: string, userId: string): Promise<ChatMessage[]> {
     return this.messageRepo.find({
-      where: { sessionId },
+      where: { sessionId, userId },
       order: { createdAt: 'ASC' },
     });
   }
@@ -79,7 +80,16 @@ export class ConversationsService {
     return this.taskRepo.save(task);
   }
 
-  async getTasksBySession(sessionId: string): Promise<Task[]> {
+  async getTasksBySession(sessionId: string, userId: string): Promise<Task[]> {
+    // Validar que el usuario tenga mensajes en esta sesión
+    const hasAccess = await this.messageRepo.findOne({
+      where: { sessionId, userId },
+    });
+
+    if (!hasAccess) {
+      throw new UnauthorizedException('No tienes acceso a esta sesión');
+    }
+
     return this.taskRepo.find({
       where: { sessionId },
       order: { createdAt: 'DESC' },

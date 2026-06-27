@@ -4,9 +4,13 @@ import { ConversationsController } from './conversations.controller';
 import { ConversationsService } from './conversations.service';
 import { ChatMessage } from './entities/chat-message.entity';
 import { Task } from './entities/task.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ChatMessage, Task])],
+  imports: [
+    TypeOrmModule.forFeature([ChatMessage, Task]),
+    AuthModule,
+  ],
   controllers: [ConversationsController],
   providers: [ConversationsService],
   exports: [TypeOrmModule, ConversationsService],

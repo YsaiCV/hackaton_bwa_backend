@@ -53,9 +53,9 @@ export class CitizenshipService {
      * Ejecuta el pipeline de agentes para una consulta de ciudadanía.
      * Crea o reutiliza una sesión ADK según el sessionId recibido.
      */
-    async processQuery(dto: CitizenshipQueryDto): Promise<CitizenshipResponseDto> {
+    async processQuery(dto: CitizenshipQueryDto, explicitUserId?: string): Promise<CitizenshipResponseDto> {
         const startTime = Date.now();
-        const userId = dto.userId ?? 'anonymous';
+        const userId = explicitUserId ?? dto.userId ?? 'anonymous';
         const sessionId = dto.sessionId ?? uuidv4();
 
         this.logger.log(`[${sessionId}] Procesando consulta: "${dto.query}"`);
