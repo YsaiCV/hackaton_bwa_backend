@@ -5,30 +5,17 @@ import {
   ProcedureResearchEvent,
   ResearchResult,
 } from '../types/research-result.type';
-import { ScraperService } from './scraper.service';
 import { SynthesisAgentService } from './synthesis-agent.service';
-import { WebSearchAgentService } from './web-search-agent.service';
 
 @Injectable()
 export class OrchestratorService {
-  constructor(
-    private readonly webSearchAgent: WebSearchAgentService,
-    private readonly scraperService: ScraperService,
-    private readonly synthesisAgent: SynthesisAgentService,
-  ) {}
+  constructor(private readonly synthesisAgent: SynthesisAgentService) {}
 
   async research(
     dto: ResearchProcedureDto,
-    signal?: AbortSignal,
+    _signal?: AbortSignal,
   ): Promise<ResearchResult> {
-    const classifiedQuery = this.classifyQuery(dto);
-    const webResult = await this.webSearchAgent.search(classifiedQuery, signal);
-    const pages = await this.scraperService.scrapeMany(
-      webResult.sources.map((source) => source.url),
-      signal,
-    );
-
-    return this.synthesisAgent.synthesize(webResult, pages);
+    return this.synthesisAgent.synthesize(this.createBaseResult(dto), []);
   }
 
   streamResearch(
@@ -46,47 +33,6 @@ export class OrchestratorService {
             },
           });
 
-          const classifiedQuery = this.classifyQuery(dto);
-
-          subscriber.next({
-            event: 'status',
-            data: {
-              step: 'searching',
-              message: 'Buscando fuentes oficiales',
-            },
-          });
-
-          const webResult = await this.webSearchAgent.search(
-            classifiedQuery,
-            signal,
-          );
-
-          for (const source of webResult.sources) {
-            subscriber.next({ event: 'source', data: source });
-          }
-
-          subscriber.next({
-            event: 'partial',
-            data: {
-              requirements: webResult.requirements,
-              warnings: webResult.warnings,
-              sources: webResult.sources,
-            },
-          });
-
-          subscriber.next({
-            event: 'status',
-            data: {
-              step: 'scraping',
-              message: 'Leyendo paginas oficiales encontradas',
-            },
-          });
-
-          const pages = await this.scraperService.scrapeMany(
-            webResult.sources.map((source) => source.url),
-            signal,
-          );
-
           subscriber.next({
             event: 'status',
             data: {
@@ -95,7 +41,10 @@ export class OrchestratorService {
             },
           });
 
-          const finalResult = this.synthesisAgent.synthesize(webResult, pages);
+          const finalResult = this.synthesisAgent.synthesize(
+            this.createBaseResult(dto),
+            [],
+          );
 
           subscriber.next({ event: 'final', data: finalResult });
           subscriber.complete();
@@ -127,5 +76,23 @@ export class OrchestratorService {
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  private createBaseResult(dto: ResearchProcedureDto): ResearchResult {
+    const query = this.classifyQuery(dto);
+
+    return {
+      summary: `Consulta recibida para sintetizar: ${query}`,
+      requirements: [],
+      steps: [],
+      fees: [],
+      deadlines: [],
+      warnings: [
+        'El agente de web search esta desactivado porque su respuesta no cumple el formato JSON esperado.',
+        'El agente de scraping esta desactivado porque depende de las fuentes del web search.',
+      ],
+      sources: [],
+      confidence: 'low',
+    };
   }
 }

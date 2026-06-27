@@ -1,45 +1,40 @@
 import { lastValueFrom, toArray } from 'rxjs';
-import { OrchestratorService } from './orchestrator.service';
-import { ScraperService } from './scraper.service';
-import { SynthesisAgentService } from './synthesis-agent.service';
-import { WebSearchAgentService } from './web-search-agent.service';
 import type { ProcedureResearchEvent } from '../types/research-result.type';
+import { OrchestratorService } from './orchestrator.service';
+import { SynthesisAgentService } from './synthesis-agent.service';
 
 describe('OrchestratorService', () => {
-  it('streams status, source, partial and final events', async () => {
-    const webSearchAgent = {
-      search: jest.fn().mockResolvedValue({
-        summary: 'Resumen',
-        requirements: ['CI'],
-        steps: ['Enviar formulario'],
-        fees: [],
-        deadlines: [],
-        warnings: [],
-        sources: [
-          {
-            title: 'GAMLP',
-            url: 'https://lapaz.bo/licencia',
-            type: 'google_grounding',
-          },
-        ],
-        confidence: 'high',
-      }),
-    } as unknown as WebSearchAgentService;
-    const scraperService = {
-      scrapeMany: jest.fn().mockResolvedValue([
-        {
-          title: 'GAMLP',
-          url: 'https://lapaz.bo/licencia',
-          text: 'Requisitos oficiales',
-        },
-      ]),
-    } as unknown as ScraperService;
-    const service = new OrchestratorService(
-      webSearchAgent,
-      scraperService,
-      new SynthesisAgentService(),
-    );
+  let service: OrchestratorService;
 
+  beforeEach(() => {
+    service = new OrchestratorService(new SynthesisAgentService());
+  });
+
+  it('returns a synthesis-only result without web search or scraping', async () => {
+    const result = await service.research({
+      query: 'licencia funcionamiento',
+      city: 'La Paz',
+      procedureType: 'licencia_funcionamiento',
+    });
+
+    expect(result).toMatchObject({
+      requirements: [],
+      steps: [],
+      fees: [],
+      deadlines: [],
+      sources: [],
+      confidence: 'low',
+    });
+    expect(result.summary).toContain('licencia funcionamiento');
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        'El agente de web search esta desactivado porque su respuesta no cumple el formato JSON esperado.',
+        'El agente de scraping esta desactivado porque depende de las fuentes del web search.',
+      ]),
+    );
+  });
+
+  it('streams only classification, synthesis and final events', async () => {
     const events: ProcedureResearchEvent[] = await lastValueFrom(
       service
         .streamResearch({
@@ -53,20 +48,16 @@ describe('OrchestratorService', () => {
     expect(events.map((event) => event.event)).toEqual([
       'status',
       'status',
-      'source',
-      'partial',
-      'status',
-      'status',
       'final',
     ]);
+    expect(events.map((event) => event.event)).not.toContain('source');
+    expect(events.map((event) => event.event)).not.toContain('partial');
     expect(events.at(-1)).toMatchObject({
       event: 'final',
       data: {
-        summary: 'Resumen',
-        requirements: ['CI'],
-        sources: expect.arrayContaining([
-          expect.objectContaining({ url: 'https://lapaz.bo/licencia' }),
-        ]),
+        requirements: [],
+        sources: [],
+        confidence: 'low',
       },
     });
   });
