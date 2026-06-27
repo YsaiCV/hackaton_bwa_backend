@@ -57,6 +57,7 @@ No incluyas texto antes ni después del JSON. El JSON debe tener EXACTAMENTE est
     }
   ],
   "hasDownloadableDocs": true/false,
+  "downloadableFormUrl": "URL del PDF rellenable (si lo hay) o null",
   "hasDynamicFill": true/false
 }
 `,
