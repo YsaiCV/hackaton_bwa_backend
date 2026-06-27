@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 
 // ── Request ────────────────────────────────────────────────────────────────
 
@@ -7,12 +8,15 @@ export class CitizenshipQueryDto {
     description: 'Consulta del usuario sobre el trámite de ciudadanía',
     example: 'quiero hacer el trámite de ciudadanía española por residencia',
   })
+  @IsString()
   query: string;
 
   @ApiPropertyOptional({
     description: 'ID de sesión existente para continuar una conversación',
     example: 'session-abc123',
   })
+  @IsOptional()
+  @IsString()
   sessionId?: string;
 
   @ApiPropertyOptional({
@@ -20,6 +24,8 @@ export class CitizenshipQueryDto {
     example: 'user-001',
     default: 'anonymous',
   })
+  @IsOptional()
+  @IsString()
   userId?: string;
 }
 

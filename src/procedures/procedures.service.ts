@@ -90,6 +90,10 @@ export class CitizenshipService {
             const agentName: string = event.author ?? 'unknown';
             const content = event.content?.parts?.[0]?.text ?? '';
 
+            if (event.errorCode) {
+                throw new Error(`Error del Agente: ${event.errorMessage} (Código: ${event.errorCode})`);
+            }
+
             if (!content) continue; // saltar eventos sin texto (tool calls intermedios)
 
             this.logger.debug(

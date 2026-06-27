@@ -1,6 +1,6 @@
 allowBuilds:
   '@google/genai': true
-  '@scarf/scarf': set this to true or false
+  '@scarf/scarf': true
   protobufjs: true
   sqlite3: false
   unrs-resolver: true

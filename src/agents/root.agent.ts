@@ -29,7 +29,7 @@ export const citizenshipPipeline = new SequentialAgent({
  */
 export const rootAgent = new LlmAgent({
     name: 'CitizenshipCoordinator',
-    model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+    model: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
     description: 'Coordinador principal de consultas sobre trámites de ciudadanía e inmigración.',
     instruction: `
 Eres el coordinador de un sistema de asistencia para trámites de ciudadanía.

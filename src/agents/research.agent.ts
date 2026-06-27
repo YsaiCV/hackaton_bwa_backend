@@ -11,7 +11,7 @@ import { LlmAgent, GOOGLE_SEARCH } from '@google/adk';
  */
 export const researchAgent = new LlmAgent({
     name: 'ResearchAgent',
-    model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+    model: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
     description:
         'Especialista en buscar información oficial sobre trámites de ciudadanía usando Google Search.',
     instruction: `

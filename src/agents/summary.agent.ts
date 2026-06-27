@@ -11,7 +11,7 @@ import { LlmAgent } from '@google/adk';
  */
 export const summaryAgent = new LlmAgent({
     name: 'SummaryAgent',
-    model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+    model: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
     description:
         'Transforma resultados de investigación en una guía práctica y accionable para el ciudadano.',
     instruction: `
