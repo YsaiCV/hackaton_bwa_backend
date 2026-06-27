@@ -10,11 +10,11 @@ import { LlmAgent } from '@google/adk';
  * Escribe: output → session.state["final_summary"]  via outputKey
  */
 export const summaryAgent = new LlmAgent({
-    name: 'SummaryAgent',
-    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
-    description:
-        'Transforma resultados de investigación en una guía práctica y accionable para el ciudadano.',
-    instruction: `
+  name: 'SummaryAgent',
+  model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+  description:
+    'Transforma resultados de investigación en una guía práctica y accionable para el ciudadano.',
+  instruction: `
 Eres un experto en comunicación clara sobre trámites administrativos.
 
 Con base en la siguiente investigación realizada:
@@ -77,5 +77,5 @@ No incluyas texto antes ni después del JSON. El JSON debe tener EXACTAMENTE est
   "hasDynamicFill": true/false
 }
 `,
-    outputKey: 'final_summary',
+  outputKey: 'final_summary',
 });

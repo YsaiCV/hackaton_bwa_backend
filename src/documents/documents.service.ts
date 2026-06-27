@@ -1,6 +1,6 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import axios from 'axios';
-import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFOptionList, PDFRadioGroup } from 'pdf-lib';
+import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFOptionList, PDFRadioGroup, StandardFonts } from 'pdf-lib';
 
 @Injectable()
 export class DocumentsService {
@@ -141,6 +141,107 @@ export class DocumentsService {
     page.drawText(data.remitenteReg || 'Aclaración de firma: ____________________', { x: marginX + 100, y: currentY, size: fontSize });
     currentY -= 20;
     page.drawText(data.remitenteCI || 'C.I.: _______________________________', { x: marginX + 100, y: currentY, size: fontSize });
+
+    return await pdfDoc.save();
+  }
+
+  async generateProcedurePdf(data: any): Promise<Uint8Array> {
+    const pdfDoc = await PDFDocument.create();
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontNormal = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    
+    let page = pdfDoc.addPage([595.28, 841.89]); // A4
+    const marginX = 50;
+    let currentY = 780;
+    const bottomMargin = 50;
+
+    const checkPageBreak = (neededSpace: number) => {
+      if (currentY - neededSpace < bottomMargin) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        currentY = 780;
+      }
+    };
+
+    // Helper for wrapped text
+    const drawWrapped = (text: string, size: number, font: any, x: number, maxWidth: number) => {
+      const words = text.split(' ');
+      let line = '';
+      for (const word of words) {
+        const testLine = line + word + ' ';
+        const width = font.widthOfTextAtSize(testLine, size);
+        if (width > maxWidth && line !== '') {
+          checkPageBreak(size + 5);
+          page.drawText(line, { x, y: currentY, size, font });
+          currentY -= (size + 5);
+          line = word + ' ';
+        } else {
+          line = testLine;
+        }
+      }
+      if (line !== '') {
+        checkPageBreak(size + 5);
+        page.drawText(line, { x, y: currentY, size, font });
+        currentY -= (size + 5);
+      }
+    };
+
+    // Título
+    if (data.title) {
+      checkPageBreak(40);
+      drawWrapped(data.title.toUpperCase(), 18, fontBold, marginX, 495);
+      currentY -= 10;
+    }
+
+    if (data.institution) {
+      checkPageBreak(20);
+      drawWrapped(data.institution, 12, fontBold, marginX, 495);
+      currentY -= 15;
+    }
+
+    // Datos rápidos
+    const quickInfo = [
+      `Costo: ${data.cost || 'N/A'}`,
+      `Tiempo: ${data.time || 'N/A'}`,
+      `Modalidad: ${data.modality || 'N/A'}`,
+      `Quién puede realizarlo: ${data.whoCanDoIt || 'N/A'}`
+    ];
+    
+    for (const info of quickInfo) {
+      checkPageBreak(15);
+      page.drawText(`• ${info}`, { x: marginX, y: currentY, size: 11, font: fontNormal });
+      currentY -= 15;
+    }
+    currentY -= 10;
+
+    // Helper to draw lists
+    const drawSection = (title: string, items: any[], isDocument = false) => {
+      if (!items || items.length === 0) return;
+      checkPageBreak(30);
+      page.drawText(title, { x: marginX, y: currentY, size: 14, font: fontBold });
+      currentY -= 20;
+
+      items.forEach((item, index) => {
+        let text = '';
+        if (typeof item === 'string') {
+          text = item;
+        } else if (item && item.name) {
+          text = item.name;
+          if (item.requiresRequestLetter) {
+            text += ' (Requiere carta de solicitud)';
+          }
+        }
+        
+        const prefix = isDocument ? '  - ' : `  ${index + 1}. `;
+        drawWrapped(`${prefix}${text}`, 11, fontNormal, marginX, 470);
+        currentY -= 5;
+      });
+      currentY -= 10;
+    };
+
+    drawSection('Requisitos / Documentos', data.documents, true);
+    drawSection('Pasos a seguir', data.steps, false);
+    drawSection('Recomendaciones', data.recommendations, true);
+    drawSection('Dónde realizarlo', data.whereToDoIt, true);
 
     return await pdfDoc.save();
   }

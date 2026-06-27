@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUrl, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsUrl, IsObject, IsOptional, IsString, IsArray } from 'class-validator';
 
 export class ParseDocumentDto {
   @ApiProperty({ description: 'URL del documento PDF a parsear', example: 'https://example.com/form.pdf' })
@@ -30,4 +30,17 @@ export class GenerateLetterDto {
   @ApiProperty() @IsOptional() @IsString() remitenteNombre?: string;
   @ApiProperty() @IsOptional() @IsString() remitenteReg?: string;
   @ApiProperty() @IsOptional() @IsString() remitenteCI?: string;
+}
+
+export class GenerateProcedurePdfDto {
+  @ApiProperty() @IsOptional() @IsString() title?: string;
+  @ApiProperty() @IsOptional() @IsString() institution?: string;
+  @ApiProperty() @IsOptional() @IsString() cost?: string;
+  @ApiProperty() @IsOptional() @IsString() time?: string;
+  @ApiProperty() @IsOptional() @IsString() modality?: string;
+  @ApiProperty() @IsOptional() @IsArray() steps?: string[];
+  @ApiProperty() @IsOptional() @IsArray() documents?: any[];
+  @ApiProperty() @IsOptional() @IsArray() recommendations?: string[];
+  @ApiProperty() @IsOptional() @IsString() whoCanDoIt?: string;
+  @ApiProperty() @IsOptional() @IsArray() whereToDoIt?: string[];
 }

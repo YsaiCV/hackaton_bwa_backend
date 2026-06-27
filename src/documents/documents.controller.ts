@@ -2,7 +2,7 @@ import { Controller, Post, Get, Body, Res, HttpCode, HttpStatus } from '@nestjs/
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { type Response } from 'express';
 import { DocumentsService } from './documents.service';
-import { ParseDocumentDto, FillDocumentDto, GenerateLetterDto } from './dto/documents.dto';
+import { ParseDocumentDto, FillDocumentDto, GenerateLetterDto, GenerateProcedurePdfDto } from './dto/documents.dto';
 
 @ApiTags('Documents')
 @Controller('documents')
@@ -48,6 +48,18 @@ export class DocumentsController {
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="carta-solicitud.pdf"');
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    res.send(Buffer.from(pdfBytes));
+  }
+  @Post('generate-procedure')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Generar un PDF con los detalles completos del trámite' })
+  async generateProcedure(@Body() dto: GenerateProcedurePdfDto, @Res() res: Response) {
+    const pdfBytes = await this.documentsService.generateProcedurePdf(dto);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="detalle-tramite.pdf"');
     res.setHeader('Content-Length', pdfBytes.length);
     
     res.send(Buffer.from(pdfBytes));
