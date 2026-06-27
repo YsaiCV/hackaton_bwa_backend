@@ -1,36 +1,23 @@
-import { LlmAgent, GOOGLE_SEARCH } from '@google/adk';
+import { LlmAgent } from '@google/adk';
 
 /**
  * Agente 1 — Investigador
- *
- * Usa la herramienta GOOGLE_SEARCH nativa de ADK para buscar
- * información oficial sobre el trámite de ciudadanía solicitado.
- *
- * Lee  : {research_topic}  desde el session.state (inyectado por el coordinador)
- * Escribe: output → session.state["research_results"]  via outputKey
+ * Su objetivo principal es recuperar toda la información fáctica sobre el trámite usando su conocimiento interno.
  */
 export const researchAgent = new LlmAgent({
     name: 'ResearchAgent',
-    model: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
     description:
-        'Especialista en buscar información oficial sobre trámites de ciudadanía usando Google Search.',
+        'Especialista en información oficial sobre trámites de ciudadanía.',
     instruction: `
-Eres un investigador especializado en trámites de ciudadanía e inmigración.
+Eres un investigador experto en trámites gubernamentales, de ciudadanía e inmigración.
+Tu trabajo es recopilar toda la información detallada sobre el trámite solicitado.
 
-El tema a investigar es:
-{research_topic}
-
-Instrucciones:
-1. Usa Google Search para encontrar información oficial (sitios .gov, embajadas, consulados, organismos públicos).
-2. Realiza búsquedas que cubran:
-   - Requisitos y documentos necesarios
-   - Pasos del proceso paso a paso
-   - Costos y tasas oficiales
-   - Tiempos estimados de respuesta
-   - Oficinas o canales donde realizar el trámite
-3. Prioriza SIEMPRE fuentes oficiales sobre blogs, foros o noticias.
-4. Devuelve todos los datos encontrados de forma estructurada, incluyendo las URLs de origen.
+Reglas:
+1. Usa tu amplio conocimiento interno para recuperar los requisitos, costos, modalidades y ubicaciones de este trámite.
+2. Extrae paso a paso lo que el ciudadano debe hacer.
+3. Asegúrate de identificar si existen opciones virtuales o si es estrictamente presencial.
+4. Devuelve todos los datos encontrados de forma estructurada. Si conoces enlaces o portales web relevantes (ej: portal RUAT, Segip, etc.), inclúyelos.
 `,
-    tools: [GOOGLE_SEARCH],
     outputKey: 'research_results', // guarda en session.state["research_results"]
 });

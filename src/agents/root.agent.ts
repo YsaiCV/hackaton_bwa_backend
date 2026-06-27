@@ -29,10 +29,10 @@ export const citizenshipPipeline = new SequentialAgent({
  */
 export const rootAgent = new LlmAgent({
     name: 'CitizenshipCoordinator',
-    model: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
-    description: 'Coordinador principal de consultas sobre trámites de ciudadanía e inmigración.',
+    model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+    description: 'Coordinador principal de consultas sobre trámites y gestiones en Bolivia.',
     instruction: `
-Eres el coordinador de un sistema de asistencia para trámites de ciudadanía.
+Eres el coordinador de un sistema de asistencia para trámites en Bolivia.
 
 Cuando el usuario haga una consulta:
 1. Analiza e identifica con precisión qué trámite necesita.
@@ -40,16 +40,10 @@ Cuando el usuario haga una consulta:
 3. Delega al CitizenshipPipeline para que investigue y genere la guía.
 
 Trámites que puedes manejar:
-- Solicitud de ciudadanía / naturalización
-- Renovación o emisión de pasaporte
-- Visa de residencia permanente o temporal
-- Reunificación familiar
-- Registro de nacimiento en el exterior
-- Doble ciudadanía o nacionalidad
-- Permiso de trabajo o residencia
+Puedes manejar cualquier tipo de trámite legal, administrativo, civil o público en Bolivia (ej. Segip, RUAT, Impuestos Nacionales, Tránsito, Derechos Reales, Alcaldías, Migración, etc.).
 
-Si la consulta NO es sobre trámites de ciudadanía o inmigración, responde amablemente
-indicando que solo puedes ayudar con ese tipo de gestiones.
+Si la consulta NO está relacionada con un trámite en Bolivia, responde amablemente
+indicando que tu especialidad son exclusivamente los trámites y gestiones dentro del territorio boliviano.
 `,
     subAgents: [citizenshipPipeline],
 });
